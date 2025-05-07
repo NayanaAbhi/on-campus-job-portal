@@ -71,12 +71,13 @@
 <body>
   <div class="sidebar">
     <h4>CampusJobs</h4>
-    <a href="{% url 'my-jobs' %}">My Jobs</a>
-    <a href="{% url 'manager-applications' %}">Applications</a>
-    <a href="{% url 'assign-shift' %}">Assign Shifts</a>
+    <a data-section="manager-welcome">Home</a>
+    <a data-section="manager-jobs">My Jobs</a>
+    <a data-section="manager-applications">Applications</a>
+    <a data-section="manager-assignshift">Assign Shifts</a>
     <a data-section="manager-shifts">Assigned Shifts</a>
     <a data-section="manager-postjob">Post New Job</a>
-    <a href="{% url 'manager-view-availability' %}">View Availability</a>
+    <a data-section="manager-availability">View Availability</a>
   </div>
 
   <div class="main">
@@ -88,30 +89,93 @@
       </div>
     </div>
 
-    <div class="container mt-4">
-      <div id="manager-jobs" class="dashboard-section">
-        <h5> My Posted Jobs</h5>
-        {% for job in jobs %}
-          <div><strong>{{ job.title }}</strong> - {{ job.department }} ({{ job.hours_per_week }} hrs/week)</div>
-        {% empty %}
-          <p>You haven't posted any jobs yet.</p>
-        {% endfor %}
-      </div>
+    <div id="manager-welcome" class="dashboard-section active">
+      <h2>Welcome, {{ manager_name }}!</h2>
+      <p>Use the sidebar to manage job postings, applications, shifts, and more.</p>
+    </div>
 
+    <div id="manager-jobs" class="dashboard-section">
+      <h2>My Posted Jobs</h2>
+      {% if jobs %}
+        <ul>
+          {% for job in jobs %}
+            <li><strong>{{ job.title }}</strong> - {{ job.department }} ({{ job.hours_per_week }} hrs/week)</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>You haven't posted any jobs yet.</p>
+      {% endif %}
+    </div>
+
+      <!-- Applications Section -->
       <div id="manager-applications" class="dashboard-section">
         <h5> Applications</h5>
         {% for group in job_data %}
           <h6>{{ group.job.title }}</h6>
-          <ul>
+          <ul class="list-group">
             {% for app in group.applications %}
-              <li>{{ app.student.username }} - {{ app.status }}</li>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>{{ app.student.username }}</strong><br>
+                  Applied on: {{ app.applied_at|date:"M d, Y H:i" }}
+                </div>
+                <div class="text-end">
+                  <span class="badge 
+                    {% if app.status == 'accepted' %} bg-success 
+                    {% elif app.status == 'rejected' %} bg-danger 
+                    {% else %} bg-info text-dark 
+                    {% endif %}">{{ app.status|default:"pending" }}</span>
+                  {% if app.status == 'pending' %}
+                    <form method="post" action="{% url 'manager-applications' %}" class="d-inline ms-2">
+                      {% csrf_token %}
+                      <input type="hidden" name="application_id" value="{{ app.id }}">
+                      <button type="submit" name="action" value="accept" class="btn btn-sm btn-outline-success">Accept</button>
+                      <button type="submit" name="action" value="reject" class="btn btn-sm btn-outline-danger">Reject</button>
+                    </form>
+                  {% endif %}
+                </div>
+              </li>
             {% empty %}
-              <li>No applications yet.</li>
+              <li class="list-group-item">No applications yet.</li>
             {% endfor %}
           </ul>
         {% endfor %}
       </div>
 
+      <!-- Assign Shifts Section -->
+      <div id="manager-assignshift" class="dashboard-section">
+        <h5>Assign Shift</h5>
+        <form method="post" action="{% url 'assign-shift' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label>Student:</label>
+            <select name="student_id" class="form-select">
+              {% for app in applications %}
+                <option value="{{ app.student.id }}">{{ app.student.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Job:</label>
+            <select name="job_id" class="form-select">
+              {% for job in jobs %}
+                <option value="{{ job.id }}">{{ job.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label>Start Time:</label>
+            <input type="datetime-local" name="start_time" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label>End Time:</label>
+            <input type="datetime-local" name="end_time" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Assign</button>
+        </form>
+      </div>
+
+      <!-- Assigned Shifts Section -->
       <div id="manager-shifts" class="dashboard-section">
         <h5>Assigned Shifts</h5>
         <table>
@@ -133,6 +197,7 @@
         </table>
       </div>
 
+      <!-- Post Job Section -->
       <div id="manager-postjob" class="dashboard-section">
         <h5>Post a New Job</h5>
         <form method="post" action="{% url 'post-job' %}">
@@ -157,8 +222,9 @@
         </form>
       </div>
 
+      <!-- View Availability Section -->
       <div id="manager-availability" class="dashboard-section">
-        <h5> Student Availability</h5>
+        <h5>Student Availability</h5>
         <table class="table">
           <thead>
             <tr><th>Student</th><th>Date</th><th>Start</th><th>End</th></tr>
@@ -181,15 +247,36 @@
   </div>
 
   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      let sectionToShow = 'manager-welcome';
+      if (params.get("show")) sectionToShow = "manager-" + params.get("show");
+
+      document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(sectionToShow)?.classList.add('active');
+
+      document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-section') === sectionToShow) {
+          link.classList.add('active');
+        }
+      });
+    });
+
     document.querySelectorAll('.sidebar a[data-section]').forEach(link => {
-      link.addEventListener('click', function () {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
         const sectionId = this.getAttribute('data-section');
-        document.querySelectorAll('.dashboard-section').forEach(sec => {
-          sec.classList.remove('active');
-        });
-        document.getElementById(sectionId).classList.add('active');
+
+        document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
+        document.getElementById(sectionId)?.classList.add('active');
+
+        document.querySelectorAll('.sidebar a[data-section]').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+
+        history.replaceState(null, "", "?show=" + sectionId.replace("manager-", ""));
       });
     });
   </script>
 </body>
-</html>
+</html>"""

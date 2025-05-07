@@ -290,13 +290,14 @@ def manager_dashboard_html(request):
     all_shifts = [] 
 
     for job in jobs:
-        applications = job.application_set.all()
+        job_applications = job.application_set.all()
+        all_applications = Application.objects.select_related("student").all()
         shifts = job.shift_set.all()
         all_shifts.extend(shifts)  # Add to total shift list
 
         job_data.append({
             'job': job,
-            'applications': applications,
+            'applications': job_applications,
             'shifts': shifts
         })
     all_availability = Availability.objects.select_related('student').all()
@@ -306,6 +307,8 @@ def manager_dashboard_html(request):
         'job_data': job_data,
         'shifts': all_shifts, 
         'availabilities': all_availability,
+        'jobs': jobs,
+        'applications': all_applications,
 
     })
 
@@ -332,7 +335,7 @@ def post_job_view(request):
                 posted_by=request.user
             )
             messages.success(request, "Job posted successfully!")
-            return redirect('manager-dashboard-html')
+            return redirect(reverse('manager-dashboard-html') + '?show=postjob')
         else:
             return render(request, 'post_job_form.html', {'error': 'All fields are required.'})
 
@@ -355,7 +358,7 @@ def manager_applications_view(request):
         except Application.DoesNotExist:
             messages.error(request, "Application not found.")
 
-        return redirect("manager-applications")
+        return redirect(reverse("manager-dashboard-html") + '?show=applications')
 
     jobs = Job.objects.filter(posted_by=request.user).prefetch_related("application_set__student")
     job_applications = []
@@ -390,7 +393,7 @@ def assign_shift_view(request):
                 end_time=end_time,
                 approved=False
             )
-            return redirect("assign-shift")
+            return redirect(reverse("manager-dashboard-html") + '?show=shifts')
 
     applications = Application.objects.select_related("student").all()
     jobs = Job.objects.all()
