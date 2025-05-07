@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Edit Shift</h2>
+<form method="post">
+  {% csrf_token %}
+  <label>Start Time:</label>
+  <input type="datetime-local" name="start_time" value="{{ shift.start_time|date:'Y-m-d\\TH:i' }}" required><br><br>
+  <label>End Time:</label>
+  <input type="datetime-local" name="end_time" value="{{ shift.end_time|date:'Y-m-d\\TH:i' }}" required><br><br>
+  <button type="submit" class="btn btn-success">Update</button>
+</form>
+{% endblock %}

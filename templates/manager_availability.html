@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .container {
+    max-width: 1000px;
+    margin: auto;
+    padding-top: 20px;
+  }
+  .filter-bar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  .filter-bar select {
+    width: 200px;
+  }
+</style>
+
+<div class="container">
+  <h2 class="mb-4">📋 Student Availabilities</h2>
+
+  <div class="filter-bar">
+    <label for="filterView" class="me-2 fw-bold">Filter View:</label>
+    <select id="filterView" class="form-select" onchange="filterByView()">
+      <option value="all">All</option>
+      <option value="day">Today</option>
+      <option value="week">This Week</option>
+      <option value="month">This Month</option>
+    </select>
+  </div>
+
+  <table class="table table-bordered" id="availabilityTable">
+    <thead class="table-light">
+      <tr>
+        <th>Student</th>
+        <th>Date</th>
+        <th>Start Time</th>
+        <th>End Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for availability in availabilities %}
+        <tr data-date="{{ availability.date }}">
+          <td>{{ availability.student.username }}</td>
+          <td>{{ availability.date }}</td>
+          <td>{{ availability.start_time|time:"g:i A" }}</td>
+          <td>{{ availability.end_time|time:"g:i A" }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4" class="text-center">No availability data found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  function filterByView() {
+    const view = document.getElementById("filterView").value;
+    const rows = document.querySelectorAll("#availabilityTable tbody tr");
+    const today = new Date();
+    
+    rows.forEach(row => {
+      const dateStr = row.getAttribute("data-date");
+      const date = new Date(dateStr);
+      const diffDays = Math.floor((date - today) / (1000 * 60 * 60 * 24));
+      row.style.display = "";
+
+      if (view === "day" && !isSameDate(date, today)) {
+        row.style.display = "none";
+      } else if (view === "week" && (diffDays < 0 || diffDays > 6)) {
+        row.style.display = "none";
+      } else if (view === "month" && date.getMonth() !== today.getMonth()) {
+        row.style.display = "none";
+      }
+    });
+  }
+
+  function isSameDate(date1, date2) {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
+</script>
+{% endblock %}

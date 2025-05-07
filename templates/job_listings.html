@@ -1,0 +1,11 @@
+<!-- templates/job_listings.html -->
+<h2>My Posted Jobs</h2>
+{% if jobs %}
+  <ul>
+    {% for job in jobs %}
+      <li><strong>{{ job.title }}</strong> - {{ job.department }} ({{ job.hours_per_week }} hrs/week)</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>You haven't posted any jobs yet.</p>
+{% endif %}

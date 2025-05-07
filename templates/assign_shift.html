@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Assign Shift</h2>
+
+    <form method="POST" class="mb-4 p-3 border rounded bg-light">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label class="form-label">Student:</label>
+            <select name="student_id" class="form-select" required>
+                {% for app in applications %}
+                    <option value="{{ app.student.id }}">{{ app.student.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Job:</label>
+            <select name="job_id" class="form-select" required>
+                {% for job in jobs %}
+                    <option value="{{ job.id }}">{{ job.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Start Time:</label>
+            <input type="datetime-local" name="start_time" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">End Time:</label>
+            <input type="datetime-local" name="end_time" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Assign Shift</button>
+    </form>
+
+    <h4>Assigned Shifts</h4>
+    {% if shifts %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Job Title</th>
+                    <th>Student</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for shift in shifts %}
+                    <tr>
+                        <td>{{ shift.job.title }}</td>
+                        <td>{{ shift.student.username }}</td>
+                        <td>{{ shift.start_time|date:"M d, Y H:i" }}</td>
+                        <td>{{ shift.end_time|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'edit-shift' shift.id %}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{% url 'delete-shift' shift.id %}" method="post" style="display:inline;">
+                              {% csrf_token %}
+                              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                          </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No shifts assigned yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

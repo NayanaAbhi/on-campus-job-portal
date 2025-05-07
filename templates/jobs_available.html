@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Available Job Openings</h2>
+
+    <!-- Filter Form -->
+    <form method="get" class="row g-3 mb-4 align-items-end">
+        <div class="col-md-4">
+            <label for="department" class="form-label">Filter by Department</label>
+            <select name="department" id="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                    <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4">
+            <label for="hours" class="form-label">Max Hours per Week</label>
+            <select name="hours" id="hours" class="form-select">
+                <option value="">Any</option>
+                <option value="10" {% if selected_hours == "10" %}selected{% endif %}>Up to 10</option>
+                <option value="20" {% if selected_hours == "20" %}selected{% endif %}>Up to 20</option>
+                <option value="30" {% if selected_hours == "30" %}selected{% endif %}>Up to 30</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label for="role" class="form-label">Posted By Role</label>
+            <select name="role" id="role" class="form-select">
+                <option value="">All</option>
+                <option value="manager" {% if selected_role == "manager" %}selected{% endif %}>Manager</option>
+                <option value="student" {% if selected_role == "student" %}selected{% endif %}>Student</option>
+            </select>
+        </div>
+
+        <div class="col-md-1 d-flex">
+            <button type="submit" class="btn btn-primary me-1">Filter</button>
+            <a href="{% url 'jobs-available' %}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <!-- Job Listings -->
+    {% if jobs %}
+        <div class="row">
+            {% for job in jobs %}
+                <div class="col-md-6 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ job.title }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ job.department }}</h6>
+                            <p class="card-text">
+                                <strong>Hours/Week:</strong> {{ job.hours_per_week }}<br>
+                                <strong>Description:</strong> {{ job.description|default:"No description provided." }}
+                            </p>
+
+                            {% if logged_in %}
+                                {% if job.id in applied_job_ids %}
+                                    <button class="btn btn-secondary" disabled>Already Applied</button>
+                                {% else %}
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="job_id" value="{{ job.id }}">
+                                        <button type="submit" class="btn btn-primary">Apply</button>
+                                    </form>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">No jobs available right now. Please check back later!</p>
+    {% endif %}
+</div>
+{% endblock %}
