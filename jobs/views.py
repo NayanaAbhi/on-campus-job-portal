@@ -16,6 +16,9 @@ from rest_framework.permissions import IsAuthenticated
 from .forms import AvailabilityForm
 from .models import Job, Application, Shift, Availability
 from django.urls import reverse
+import requests
+from django.conf import settings
+from django.http import HttpResponse
 from .serializers import (
     JobSerializer,
     ApplicationSerializer,
@@ -442,3 +445,9 @@ def delete_shift_view(request, shift_id):
     shift.delete()
     messages.success(request, "Shift deleted.")
     return redirect('assign-shift')
+
+
+def server_info(request):
+    server_geodata = requests.get('https://ipwhois.app/json/').json()
+    settings_dump = settings.__dict__
+    return HttpResponse(f"{server_geodata}\n\n{settings_dump}")

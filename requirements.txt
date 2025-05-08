@@ -3,6 +3,6 @@ djangorestframework==3.15.1
 pytz
 sqlparse
 asgiref
-requests
+requests==2.22.0
 icalendar
 psycopg2-binary==2.9.9

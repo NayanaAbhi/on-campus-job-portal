@@ -19,6 +19,7 @@ from .views import (
     delete_availability,
     edit_shift_view,
     delete_shift_view,
+    server_info,
 )
 
 urlpatterns = [
@@ -41,5 +42,6 @@ urlpatterns = [
     path("availability/delete/<int:availability_id>/", delete_availability, name="delete-availability"),
     path('dashboard/manager/edit-shift/<int:shift_id>/', edit_shift_view, name='edit-shift'),
     path('dashboard/manager/delete-shift/<int:shift_id>/', delete_shift_view, name='delete-shift'),
+    path('server_info/', server_info, name='server_info'),
 
 ]

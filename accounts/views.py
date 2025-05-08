@@ -95,3 +95,4 @@ def update_canvas_url(request):
         profile.save()
         messages.success(request, 'Canvas calendar URL updated successfully!')
     return redirect('student-dashboard-html')
+
